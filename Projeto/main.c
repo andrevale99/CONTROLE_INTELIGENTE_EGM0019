@@ -31,6 +31,8 @@
 //  VARIAVEIS
 //===================================================
 
+uint16_t limit = 0;
+
 //===================================================
 //  PROTOTIPOS
 //===================================================
@@ -44,12 +46,9 @@ int main()
 {
     setup_pwm_phase_correct();
 
-    DDRB |= (1 << DDB5) | (1 << PB1);
-
     for (;;)
     {
-        if (PINB & (1 << PB1))
-            PORTB ^= (1 << PB5);
+
     }
 
     return 0;
@@ -60,11 +59,16 @@ int main()
 
 void setup_pwm_phase_correct(void)
 {
-    // OC1A toggle on compare match
-    TCCR1A |= (1 << COM1A0) | (1 << WGM10);
+    // Pino OC1A (PORTB1) como OUTPUT para PWM
+    DDRB |= (1 << DDB1);
 
-    // Prescale de 1024
-    TCCR1B |= (1 << WGM13) | (1 << CS12) | (1 << CS10);
+    // OC1A clear on compare match
+    TCCR1A |= (1 << COM1A1) | (1 << WGM11);
 
-    OCR1A = 32500;
+    // Prescale de 1024 no modo Fast PWM com o TOP em ICR1
+    TCCR1B |= (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
+
+    OCR1A = (uint16_t)150;
+
+    ICR1 = 15000;
 }
