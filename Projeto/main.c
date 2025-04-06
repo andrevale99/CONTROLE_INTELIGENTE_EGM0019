@@ -27,11 +27,22 @@
 
 #include <stdint.h>
 
+#define GPIO_POT PC0
+
+#define ENCODER_A_PINX PIND
+#define ENCODER_A_GPIO_INPUT PD2
+#define ENCODER_B_PINX PINB
+#define ENCODER_B_GPIO_INPUT PB4
+
+#define ENCODER_A_LEVEL (ENCODER_A_PINX & (1 << ENCODER_A_GPIO_INPUT))
+#define ENCODER_B_LEVEL (ENCODER_B_PINX & (1 << ENCODER_B_GPIO_INPUT))
+
 //===================================================
 //  VARIAVEIS
 //===================================================
 
 uint16_t adcResult = 0;
+uint16_t DutyCycle = 0;
 
 //===================================================
 //  PROTOTIPOS
@@ -39,24 +50,27 @@ uint16_t adcResult = 0;
 
 void setup_pwm_phase_correct(void);
 
-
 void adc_setup(void);
 uint16_t adc_read(uint8_t pino);
 
+void setup_external_interrupt(void);
+ISR(INT0_vect);
 //===================================================
 //  MAIN
 //===================================================
 int main()
 {
   setup_pwm_phase_correct();
+  setup_external_interrupt();
   adc_setup();
 
-  Serial.begin(115200);
+  sei();
 
-  for (;;)
+  while (1)
   {
-    adcResult = adc_read(0x00);
-    Serial.println((adcResult));
+    adcResult = adc_read(GPIO_POT);
+    DutyCycle = 15000 * (float)adcResult / 1024;
+    OCR1A = DutyCycle;
   }
 
   return 0;
@@ -65,6 +79,13 @@ int main()
 //  FUNCOES
 //===================================================
 
+/**
+   @brief Configuracao do Pino PB1 (OCA1) para
+   gerar o sinal PWM para o motor.
+
+   @note O nome da funcao ja explica que modo esta o
+   contador TIMER_1.
+*/
 void setup_pwm_phase_correct(void)
 {
   // Pino OC1A (PORTB1) como OUTPUT para PWM
@@ -91,7 +112,6 @@ void adc_setup()
 {
   ADCSRA |= (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
   ADMUX |= (1 << REFS0);
-
 }
 
 /**
@@ -121,4 +141,20 @@ uint16_t adc_read(uint8_t pino)
   ADCSRA |= (1 << ADSC);
 
   return (adc_MSB << 8) | adc_LSB;
+}
+
+/**
+   @brief Configura o Pino INT0 (PD2) para
+   interrupcao externa, deteccao de borda de
+   descida
+*/
+void setup_external_interrupt(void)
+{
+  EICRA |= (1 << ISC01);
+
+  EIMSK |= (1 << INT0);
+}
+
+ISR(INT0_vect)
+{
 }
