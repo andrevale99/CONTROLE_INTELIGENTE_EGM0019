@@ -11,7 +11,7 @@
 
 #define PERIODO 100 // ms
 
-volatile long PulsosEncderA = 0;
+volatile long PulsosEncoderA = 0;
 volatile long PulsosPorPeriodo = 0;
 volatile long long ultimoTempo = 0;
 
@@ -19,12 +19,12 @@ void atualizaEncoder(void)
 {
   if (digitalRead(ENCODER_GPIO_A) == digitalRead(ENCODER_GPIO_B))
   {
-    PulsosEncderA++;
+    PulsosEncoderA++;
     PulsosPorPeriodo++;
   }
   else
   {
-    PulsosEncderA--;
+    PulsosEncoderA--;
     PulsosPorPeriodo--;
   }
 }
@@ -53,8 +53,8 @@ void loop()
   {
     ultimoTempo = tempo;
     detachInterrupt(digitalPinToInterrupt(ENCODER_GPIO_A));
-    float theta = PulsosEncderA / PulsosPorVolta * 360;
-    float omega = (PulsosEncderA / PULSOS_POR_VOLTA) * (60000 / PERIODO);
+    float theta = PulsosEncoderA / PulsosPorPeriodo * 360;
+    float omega = (PulsosEncoderA / PULSOS_POR_VOLTA) * (60000 / PERIODO);
     PulsosPorPeriodo = 0;
     attachInterrupt(digitalPinToInterrupt(ENCODER_GPIO_A),
                     atualizaEncoder, FALLING);
