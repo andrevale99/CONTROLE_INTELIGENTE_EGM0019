@@ -25,8 +25,12 @@
 #include <avr/interrupt.h>
 
 #include <stdint.h>
+#include <stdio.h>
 
-#define GPIO_POT PC0
+#define BAUD 9600
+#define MYUBRR F_CPU / 16 / BAUD - 1
+
+#define GPIO_POT 0x00
 
 #define ENCODER_A_PINX PIND
 #define ENCODER_A_PORTX PORTD
@@ -49,34 +53,39 @@ uint16_t DutyCycle = 0;
 //  PROTOTIPOS
 //===================================================
 
-void setup_pwm_phase_correct(void);
+void PWMPhaseCorrect_setup(void);
 
-void setup_gpios(void);
+void GPIOs_setup(void);
 
-void adc_setup(void);
-uint16_t adc_read(uint8_t pino);
+void ADC_setup(void);
+uint16_t ADC_read(uint8_t pino);
 
-void setup_external_interrupt(void);
+void EXTI_setup(void);
 ISR(INT0_vect);
+
+void USART_Init(unsigned int ubrr);
+void USART_Transmit(unsigned char data);
+
+int16_t mapear_valor_potenciometro(uint16_t value);
+
 //===================================================
 //  MAIN
 //===================================================
 int main()
 {
-  setup_pwm_phase_correct();
-  setup_external_interrupt();
-  adc_setup();
+  PWMPhaseCorrect_setup();
+  USART_Init(MYUBRR);
+  GPIOs_setup();
+  EXTI_setup();
+  ADC_setup();
 
   sei();
 
   while (1)
   {
-    adcResult = adc_read(GPIO_POT);
+    adcResult = ADC_read(GPIO_POT);
     DutyCycle = 15000 * (float)adcResult / 1024;
     OCR1A = DutyCycle;
-
-    if (ENCODER_A_LEVEL && ENCODER_B_LEVEL)
-      ;
   }
 
   return 0;
@@ -92,7 +101,7 @@ int main()
    @note O nome da funcao ja explica que modo esta o
    contador TIMER_1.
 */
-void setup_pwm_phase_correct(void)
+void PWMPhaseCorrect_setup(void)
 {
   // Pino OC1A (PORTB1) como OUTPUT para PWM
   DDRB |= (1 << DDB1);
@@ -112,7 +121,7 @@ void setup_pwm_phase_correct(void)
  * @brief Configuracao das GPIOS. Configura
  * os pinos para a leitura dos encoder.
  */
-void setup_gpios(void)
+void GPIOs_setup(void)
 {
   ENCODER_A_PORTX &= ~(0 << ENCODER_A_GPIO_INPUT);
   ENCODER_B_PORTX &= ~(0 << ENCODER_B_GPIO_INPUT);
@@ -124,7 +133,7 @@ void setup_gpios(void)
    @note Ativa o ADC com o prescale de 16e6/128 e
    referencia no AVCC/AREF
 */
-void adc_setup()
+void ADC_setup()
 {
   ADCSRA |= (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
   ADMUX |= (1 << REFS0);
@@ -138,7 +147,7 @@ void adc_setup()
    @note Retorna um valor de 16 bits pela facilidade,
    ja que a resolucao do arduino e de 10 bits
 */
-uint16_t adc_read(uint8_t pino)
+uint16_t ADC_read(uint8_t pino)
 {
   static uint8_t adc_LSB;
   static uint8_t adc_MSB;
@@ -165,13 +174,62 @@ uint16_t adc_read(uint8_t pino)
    interrupcao externa, deteccao de borda de
    descida
 */
-void setup_external_interrupt(void)
+void EXTI_setup(void)
 {
   EICRA |= (1 << ISC01);
 
   EIMSK |= (1 << INT0);
 }
 
+/// @brief Funcao de Ingerrupcao
 ISR(INT0_vect)
 {
+}
+
+/**
+ * @brief Inicializacao do USART
+ * @param ubrr Valor calculado do baud rate
+ *
+ * @note A definicao MYUBRR ja faz o calculo (datasheet)
+ * e inicializa somento o TX, para o RX (1<<RXEN0) no
+ * registrador UCSR0B
+ */
+void USART_Init(unsigned int ubrr)
+{
+  /*Set baud rate */
+  UBRR0H = (unsigned char)(ubrr >> 8);
+  UBRR0L = (unsigned char)ubrr;
+
+  /*Enable transmitter
+  Desativa a interrupcao Data Empty
+  Desativa a interrupcao complete*/
+  UCSR0B |= (1 << TXEN0) | (1 << TXCIE0);
+
+  /* Set frame format: 8data, 2stop bit */
+  UCSR0C |= (1 << USBS0) | (1 << UCSZ00);
+}
+
+/**
+ * @brief Transmissao de um byte pelo USART0
+ * @param data caractere
+ *
+ * @note Essa funcao é utilizada quando nao for utilizada
+ * as interrupcoes para envio de dado
+ */
+void USART_Transmit(unsigned char data)
+{
+  /* Wait for empty transmit buffer */
+  while (!(UCSR0A & (1 << UDRE0)))
+    ;
+  /* Put data into buffer, sends the data */
+  UDR0 = data;
+}
+
+/**
+ * @brief pega o valor do potenciometro e varia
+ * entre -255 e 254
+ */
+int16_t mapear_valor_potenciometro(uint16_t value)
+{
+  return ((value / 1023) * 510 - 255);
 }
