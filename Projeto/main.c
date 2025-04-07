@@ -29,8 +29,8 @@
 
 #define GPIO_POT PC0
 
-#define ENCODER_A_PINX PIND
-#define ENCODER_A_GPIO_INPUT PD2
+#define ENCODER_A_PINX PINB
+#define ENCODER_A_GPIO_INPUT PB3
 #define ENCODER_B_PINX PINB
 #define ENCODER_B_GPIO_INPUT PB4
 
@@ -71,6 +71,9 @@ int main()
     adcResult = adc_read(GPIO_POT);
     DutyCycle = 15000 * (float)adcResult / 1024;
     OCR1A = DutyCycle;
+
+    if (ENCODER_A_LEVEL && ENCODER_B_LEVEL)
+      ;
   }
 
   return 0;
