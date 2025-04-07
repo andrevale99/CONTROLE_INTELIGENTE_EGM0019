@@ -23,15 +23,16 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
 
 #include <stdint.h>
 
 #define GPIO_POT PC0
 
-#define ENCODER_A_PINX PINB
-#define ENCODER_A_GPIO_INPUT PB3
+#define ENCODER_A_PINX PIND
+#define ENCODER_A_PORTX PORTD
+#define ENCODER_A_GPIO_INPUT PD2 // Pino de interrupcao externa INT0
 #define ENCODER_B_PINX PINB
+#define ENCODER_B_PORTX PORTB
 #define ENCODER_B_GPIO_INPUT PB4
 
 #define ENCODER_A_LEVEL (ENCODER_A_PINX & (1 << ENCODER_A_GPIO_INPUT))
@@ -49,6 +50,8 @@ uint16_t DutyCycle = 0;
 //===================================================
 
 void setup_pwm_phase_correct(void);
+
+void setup_gpios(void);
 
 void adc_setup(void);
 uint16_t adc_read(uint8_t pino);
@@ -106,6 +109,16 @@ void setup_pwm_phase_correct(void)
 }
 
 /**
+ * @brief Configuracao das GPIOS. Configura
+ * os pinos para a leitura dos encoder.
+ */
+void setup_gpios(void)
+{
+  ENCODER_A_PORTX &= ~(0 << ENCODER_A_GPIO_INPUT);
+  ENCODER_B_PORTX &= ~(0 << ENCODER_B_GPIO_INPUT);
+}
+
+/**
    @brief Inicializacao do ADC
 
    @note Ativa o ADC com o prescale de 16e6/128 e
@@ -134,7 +147,8 @@ uint16_t adc_read(uint8_t pino)
 
   ADCSRA |= (1 << ADSC);
 
-  while (!(ADCSRA &= ~(1 << ADIF)));
+  while (!(ADCSRA &= ~(1 << ADIF)))
+    ;
 
   ADCSRA |= (1 << ADIF);
 
