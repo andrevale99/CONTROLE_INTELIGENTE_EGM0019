@@ -23,6 +23,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -33,9 +34,12 @@
 #define GPIO_POT 0x00
 
 #define ENCODER_A_PINX PIND
+#define ENCODER_A_DDRX DDRD
 #define ENCODER_A_PORTX PORTD
 #define ENCODER_A_GPIO_INPUT PD2 // Pino de interrupcao externa INT0
+
 #define ENCODER_B_PINX PINB
+#define ENCODER_B_DDRX DDRB
 #define ENCODER_B_PORTX PORTB
 #define ENCODER_B_GPIO_INPUT PB4
 
@@ -83,9 +87,27 @@ int main()
 
   while (1)
   {
-    adcResult = ADC_read(GPIO_POT);
-    DutyCycle = 15000 * (float)adcResult / 1024;
-    OCR1A = DutyCycle;
+    // adcResult = ADC_read(GPIO_POT);
+    // DutyCycle = 15000 * (float)adcResult / 1024;
+    // OCR1A = DutyCycle;
+
+    for (uint16_t i = 0; i < 1024; i++)
+    {
+      adcResult = i;
+      // DutyCycle = mapear_valor_potenciometro(adcResult);
+      DutyCycle = 15000 * (float)adcResult / 1024;
+      OCR1A = DutyCycle;
+      _delay_ms(2);
+    }
+
+    for (uint16_t i = 1023; i > 0; i--)
+    {
+      adcResult = i;
+      // DutyCycle = mapear_valor_potenciometro(adcResult);
+      DutyCycle = 15000 * (float)adcResult / 1024;
+      OCR1A = DutyCycle;
+      _delay_ms(2);
+    }
   }
 
   return 0;
@@ -109,10 +131,10 @@ void PWMPhaseCorrect_setup(void)
   // OC1A clear on compare match
   TCCR1A |= (1 << COM1A1) | (1 << WGM11);
 
-  // Prescale de 1024 no modo Fast PWM com o TOP em ICR1
-  TCCR1B |= (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
+  // Prescale de 1 no modo Fast PWM com o TOP em ICR1
+  TCCR1B |= (1 << WGM13) | (1 << WGM12) | (1 << CS10);
 
-  OCR1A = (uint16_t)15000 * 1;
+  OCR1A = (uint16_t)15000;
 
   ICR1 = 15000;
 }
@@ -120,11 +142,19 @@ void PWMPhaseCorrect_setup(void)
 /**
  * @brief Configuracao das GPIOS. Configura
  * os pinos para a leitura dos encoder.
+ *
+ * @note As GPIOS de input dos encoders estao
+ * no modo INPUT em PULLUP.
  */
 void GPIOs_setup(void)
 {
-  ENCODER_A_PORTX &= ~(0 << ENCODER_A_GPIO_INPUT);
-  ENCODER_B_PORTX &= ~(0 << ENCODER_B_GPIO_INPUT);
+  // Modo INPUT
+  ENCODER_A_DDRX &= ~(1 << ENCODER_A_GPIO_INPUT);
+  ENCODER_B_DDRX &= ~(1 << ENCODER_B_GPIO_INPUT);
+
+  // Ativando os PULLUPS
+  ENCODER_A_PORTX |= (1 << ENCODER_A_GPIO_INPUT);
+  ENCODER_B_PORTX |= (1 << ENCODER_B_GPIO_INPUT);
 }
 
 /**
