@@ -38,10 +38,10 @@
 #define ENCODER_A_PORTX PORTD
 #define ENCODER_A_GPIO_INPUT PD2 // Pino de interrupcao externa INT0
 
-#define ENCODER_B_PINX PINB
-#define ENCODER_B_DDRX DDRB
-#define ENCODER_B_PORTX PORTB
-#define ENCODER_B_GPIO_INPUT PB4
+#define ENCODER_B_PINX PIND
+#define ENCODER_B_DDRX DDRD
+#define ENCODER_B_PORTX PORTD
+#define ENCODER_B_GPIO_INPUT PD7
 
 #define ENCODER_A_LEVEL (ENCODER_A_PINX & (1 << ENCODER_A_GPIO_INPUT))
 #define ENCODER_B_LEVEL (ENCODER_B_PINX & (1 << ENCODER_B_GPIO_INPUT))
@@ -211,9 +211,10 @@ void EXTI_setup(void)
   EIMSK |= (1 << INT0);
 }
 
-/// @brief Funcao de Ingerrupcao
+/// @brief Funcao de Interrupcao
 ISR(INT0_vect)
 {
+  PORTB ^= (1 << PB5);
 }
 
 /**
