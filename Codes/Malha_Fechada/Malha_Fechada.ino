@@ -18,6 +18,8 @@
 volatile long PulsosCanalA = 0;
 volatile long PulsosPorPeriodo = 0;
 volatile long long ultimoTempo = 0;
+float theta = 0;
+float omega = 0;
 
 //=====================================================
 //  FUNCS
@@ -31,6 +33,8 @@ void atualizaEncoder(void);
 
 void setup()
 {
+  Serial.begin(115200);
+
   pinMode(PONTE_H_1, OUTPUT);
   pinMode(PONTE_H_1, OUTPUT);
   pinMode(PONTE_H_ENABLE, OUTPUT);
@@ -53,8 +57,8 @@ void loop()
   {
     ultimoTempo = tempo;
     detachInterrupt(digitalPinToInterrupt(CANAL_ENCODER_A));
-    float theta = PulsosCanalA / PULSOS_POR_VOLTA * 360;
-    float omega = (PulsosPorPeriodo / PULSOS_POR_VOLTA) * (60000 / PERIODO);
+    theta = PulsosCanalA / PULSOS_POR_VOLTA * 360;
+    omega = (PulsosPorPeriodo / PULSOS_POR_VOLTA) * (60000 / PERIODO);
     PulsosPorPeriodo = 0;
     attachInterrupt(digitalPinToInterrupt(CANAL_ENCODER_A),
                     atualizaEncoder, FALLING);
@@ -64,7 +68,6 @@ void loop()
   {
     digitalWrite(PONTE_H_1, LOW);
     digitalWrite(PONTE_H_2, HIGH);
-    
   }
   else
   {
@@ -72,6 +75,18 @@ void loop()
     digitalWrite(PONTE_H_2, LOW);
   }
   analogWrite(PONTE_H_ENABLE, PWM);
+
+  Serial.print((float)ultimoTempo / 1000);
+  Serial.print("\t");
+  Serial.print(valPot);
+  Serial.print("\t");
+  Serial.print(vel);
+  Serial.print("\t");
+  Serial.println(PWM);
+  Serial.print("\t");
+  Serial.print(theta);
+  Serial.print("\t");
+  Serial.println(omega);
 }
 
 //=====================================================

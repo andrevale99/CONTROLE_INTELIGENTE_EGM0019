@@ -28,6 +28,7 @@ void loop()
   int valPot = analogRead(POT_PIN);
   int vel = map(valPot, 0, 1023, -255, 255);
   int PWM = min(abs(vel), 255);
+  long long tempo = millis();
 
   if (vel > 0)
   {
@@ -43,6 +44,8 @@ void loop()
   analogWrite(ENABLE_PONTE_H, PWM);
 
   // PRint das variaveis do sistema
+  Serial.print((float)tempo / 1000);
+  Serial.print("\t");
   Serial.print(valPot);
   Serial.print("\t");
   Serial.print(vel);
