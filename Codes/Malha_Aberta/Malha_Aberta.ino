@@ -44,9 +44,9 @@ void loop()
 
   // PRint das variaveis do sistema
   Serial.print(valPot);
-  Serial.print('\t');
+  Serial.print("\t");
   Serial.print(vel);
-  Serial.print('\t');
+  Serial.print("\t");
   Serial.println(PWM);
 }
 
