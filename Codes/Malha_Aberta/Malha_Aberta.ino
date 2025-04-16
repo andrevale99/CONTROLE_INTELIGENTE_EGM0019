@@ -16,6 +16,8 @@
 //=====================================================
 void setup() 
 {
+  Serial.begin(115200);
+
   pinMode(PONTE_H_1, OUTPUT);
   pinMode(PONTE_H_2, OUTPUT);
   pinMode(ENABLE_PONTE_H, OUTPUT);
@@ -39,6 +41,13 @@ void loop()
   }
 
   analogWrite(ENABLE_PONTE_H, PWM);
+
+  // PRint das variaveis do sistema
+  Serial.print(valPot);
+  Serial.print('\t');
+  Serial.print(vel);
+  Serial.print('\t');
+  Serial.println(PWM);
 }
 
 //=====================================================
