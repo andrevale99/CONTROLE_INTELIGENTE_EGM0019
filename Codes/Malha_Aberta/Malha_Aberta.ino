@@ -44,13 +44,14 @@ void loop()
   analogWrite(ENABLE_PONTE_H, PWM);
 
   // PRint das variaveis do sistema
-  Serial.print((float)tempo / 1000);
+  Serial.print((float)tempo / 1000, 3);
   Serial.print("\t");
   Serial.print(valPot);
   Serial.print("\t");
   Serial.print(vel);
   Serial.print("\t");
   Serial.println(PWM);
+
 }
 
 //=====================================================
