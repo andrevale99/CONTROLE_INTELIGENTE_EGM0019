@@ -1,0 +1,2 @@
+PWM minimo: 106 (anti-horario)
+PWM minimo: 127 (horario) 
