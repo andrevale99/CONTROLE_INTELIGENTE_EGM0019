@@ -23,6 +23,8 @@ volatile long long ultimoTempo = 0;
 float theta = 0;
 float omega = 0;
 
+
+
 unsigned long long TempoInicialCalculo = 0;
 unsigned long TempoTotalCalculo = 0;
 
