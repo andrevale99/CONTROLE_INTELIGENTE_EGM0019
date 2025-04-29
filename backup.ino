@@ -2,44 +2,46 @@
 
 #define BUTAO_PIN_PWM 9
 
-#define PONTE_H_1 5 // 7
+#define PONTE_H_1 5  // 7
 #define PONTE_H_2 6
-#define PONTE_H_ENABLE 5 // 5
+#define PONTE_H_ENABLE 55  // 5
 
 #define CANAL_ENCODER_B 4
 #define CANAL_ENCODER_A 3
 
-#define PULSOS_POR_VOLTA (float)341.2
+#define PULSOS_POR_VOLTA (float)2091
 
-#define PI 3.1415
-
-#define PERIODO 50 // ms
-
-#define PWM_MAX_LIMIT (float)160.0
+#define PERIODO 50  // ms
 
 //=====================================================
 //  VARIAVEIS GLOBAIS
 //=====================================================
 
+struct controle_t {
+  float erro;
+  float Kp;
+  float Ki;
+
+  float controle;
+} controlador;
+
+struct motor_t {
+  volatile long PulsosCanalA = 0;
+  long QtdPulsosCanalA = 0;
+
+  long QtdPulsoPorPeriodo = 0;
+  volatile long PulsosPorPeriodo = 0;
+
+  float theta = 0;
+  float omega = 0;
+} motor;
+
 int PWM = 0;
-
-static float controle = 0;
-
-float teste_controle = 0;
-
-volatile long PulsosCanalA = 0;
-long QtdPulsosCanalA = 0;
-long QtdPulsoPorPeriodo = 0;
-volatile long PulsosPorPeriodo = 0;
-volatile long long ultimoTempo = 0;
-float theta = 0;
-float omega = 0;
 
 static float acaoP = 0.;
 static float acaoI = 0.;
-static float erro = 0.;
-static float Kp = 3.;
-static float Ki = 10.;
+
+volatile long long ultimoTempo = 0;
 
 unsigned long long TempoInicialCalculo = 0;
 unsigned long TempoTotalCalculo = 0;
@@ -58,9 +60,13 @@ void show_data(void);
 //  SETUP E LOOP
 //=====================================================
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
+
+  // Iniciando as variaveis do controlador
+  controlador.erro = 0;
+  controlador.Ki = 0.02;
+  controlador.Kp = 0.5;
 
   pinMode(PONTE_H_1, OUTPUT);
   pinMode(PONTE_H_1, OUTPUT);
@@ -72,17 +78,15 @@ void setup()
   pinMode(BUTAO_PIN_PWM, INPUT_PULLUP);
 
   attachInterrupt(digitalPinToInterrupt(CANAL_ENCODER_A),
-                  atualizaEncoder, CHANGE);
+                  atualizaEncoder, FALLING);
 }
 
-void loop()
-{
+void loop() {
 
-  sp = map(analogRead(POT_PIN), 0, 1023, -PWM_MAX_LIMIT, PWM_MAX_LIMIT);
+  sp = map(analogRead(POT_PIN), 0, 1023, -160, 160);
   unsigned long tempo = millis();
 
-  if ((tempo - ultimoTempo) >= PERIODO || ultimoTempo == 0)
-  {
+  if ((tempo - ultimoTempo) >= PERIODO || ultimoTempo == 0) {
     ultimoTempo = tempo;
     detachInterrupt(digitalPinToInterrupt(CANAL_ENCODER_A));
 
@@ -91,16 +95,14 @@ void loop()
     QtdPulsosCanalA = PulsosCanalA;
     QtdPulsoPorPeriodo = PulsosPorPeriodo;
 
-    // theta = PulsosCanalA / PULSOS_POR_VOLTA * 360.f;
-    theta = PulsosPorPeriodo * 2 * PI / PULSOS_POR_VOLTA;
-    // omega = (PulsosPorPeriodo / PULSOS_POR_VOLTA) * (60000 / PERIODO);
-    omega = theta / (PERIODO / 1000.0f) * (60 / (2 * PI));
+    motor.theta = motor.PulsosCanalA / PULSOS_POR_VOLTA * 360.f;
+    motor.omega = (motor.PulsosPorPeriodo / PULSOS_POR_VOLTA) * (60000 / PERIODO);
 
-    erro = sp - omega;
-    acaoP = Kp * erro;
-    acaoI += Ki * erro * (float)PERIODO / 1000.;
+    controlador.erro = sp - motor.omega;
+    acaoP = controlador.Kp * controlador.erro;
+    acaoI += controlador.Ki * controlador.erro * (float)PERIODO / 1000.;
 
-    PulsosPorPeriodo = 0;
+    motor.PulsosPorPeriodo = 0;
 
     TempoTotalCalculo = float(micros() - TempoInicialCalculo);
 
@@ -112,61 +114,36 @@ void loop()
 
   controle = acaoP + acaoI;
 
-  // anti-windup (para nao ficar
-  // incrementando a integração infinitamente)
-  if (acaoI > PWM_MAX_LIMIT)
-    acaoI = PWM_MAX_LIMIT;
-  if (acaoI < -PWM_MAX_LIMIT)
-    acaoI = -PWM_MAX_LIMIT;
-
-  // anti-windup (para nao ficar
-  // incrementando a integração infinitamente)
-  if (controle > PWM_MAX_LIMIT)
-    controle = PWM_MAX_LIMIT;
-  if (controle < -PWM_MAX_LIMIT)
-    controle = -PWM_MAX_LIMIT;
-    
-  // if (digitalRead(BUTAO_PIN_PWM) == 0) {
   PWM = min(abs(controle), 160);
   aciona_motor(controle, PWM);
-  // }4
 }
 
 //=====================================================
 //  FUNCS
 //=====================================================
 
-void atualizaEncoder(void)
-{
-  if (digitalRead(CANAL_ENCODER_A) == digitalRead(CANAL_ENCODER_B))
-  {
-    PulsosCanalA++;
-    PulsosPorPeriodo++;
-  }
-  else
-  {
-    PulsosCanalA--;
-    PulsosPorPeriodo--;
+void atualizaEncoder(void) {
+  if (digitalRead(CANAL_ENCODER_A) == digitalRead(CANAL_ENCODER_B)) {
+    motor.PulsosCanalA++;
+    motor.PulsosPorPeriodo++;
+  } else {
+    motor.PulsosCanalA--;
+    motor.PulsosPorPeriodo--;
   }
 }
 
-void aciona_motor(float controle, int PWM)
-{
-  if (controle >= 0)
-  {
+void aciona_motor(float controle, int PWM) {
+  if (controle >= 0) {
     digitalWrite(PONTE_H_1, LOW);
-    analogWrite(PONTE_H_2, HIGH);
-  }
-  else
-  {
-    analogWrite(PONTE_H_1, HIGH);
+    analogWrite(PONTE_H_2, PWM);
+  } else {
+    analogWrite(PONTE_H_1, PWM);
     digitalWrite(PONTE_H_2, LOW);
   }
-  analogWrite(PONTE_H_ENABLE, PWM);
+  // analogWrite(PONTE_H_ENABLE, PWM);
 }
 
-void show_data(void)
-{
+void show_data(void) {
   Serial.print((float)ultimoTempo / 1000, 3);
   Serial.print("\t");
   Serial.print(sp);
@@ -177,13 +154,13 @@ void show_data(void)
   // Serial.print("\t");
   // Serial.print(QtdPulsosCanalA);
   // Serial.print("\t");
-  Serial.print(QtdPulsoPorPeriodo);
+  Serial.print(motor.QtdPulsoPorPeriodo);
   Serial.print("\t");
   // Serial.print(theta);
   // Serial.print("\t");
-  Serial.print(omega);
+  Serial.print(motor.omega);
   Serial.print("\t");
-  Serial.print(erro);
+  Serial.print(controlador.erro);
   Serial.print("\t");
   Serial.print(acaoP);
   Serial.print("\t");
