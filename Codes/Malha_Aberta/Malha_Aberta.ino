@@ -9,7 +9,7 @@
 
 #define PULSOS_POR_VOLTA (float)341.2
 
-#define PERIODO 100  // ms
+#define PERIODO 50  // ms
 
 //=====================================================
 //  VARIAVEIS GLOBAIS
