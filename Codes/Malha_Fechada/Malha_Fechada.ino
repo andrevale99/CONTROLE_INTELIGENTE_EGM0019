@@ -13,7 +13,7 @@
 
 #define PI 3.1415
 
-#define PERIODO 100  // ms
+#define PERIODO 5  // ms
 
 #define RPM_MAX_LIMIT 160
 
@@ -40,8 +40,8 @@ static float acaoI = 0.;
 static float acaoD = 0.;
 static float erro = 0.;
 static float erro_anterior = 0.;
-static float Kp = 0.8;
-static float Ki = 0.0;
+static float Kp = 0.3;
+static float Ki = 1.0;
 static float Kd = 0.0;
 
 unsigned long long TempoInicialCalculo = 0;
