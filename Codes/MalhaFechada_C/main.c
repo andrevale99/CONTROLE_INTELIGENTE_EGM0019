@@ -28,14 +28,14 @@
   OCR0A = 0;                           \
   OCR0B = (uint8_t)pwm;
 
-#define RESOLUCAO (float)1024.
+#define PULSOS_POR_VOLTA (float)1024.
 
 //=====================================================
 //  VARIAVEIS GLOBAIS
 //=====================================================
 
-volatile uint32_t Pulsos = 0;
-volatile uint32_t teste = 0;
+volatile int32_t Pulsos = 0;
+volatile int32_t RPM = 0;
 
 char buffer[BUFFER_MAX_LEN];
 
@@ -79,12 +79,13 @@ int main(void)
   USART_Init(MYUBRR);
   timer_setup(PERIODO_DE_AMOSTRAGEM);
 
-  ROTOR_SNETIDO_ANTIHORARIO(254);
+  ROTOR_SNETIDO_HORARIO(254);
 
   sei();
 
   while (1)
   {
+    RPM = ((float)Pulsos / PULSOS_POR_VOLTA) * (60000 / PERIODO_DE_AMOSTRAGEM);
   }
 }
 
@@ -130,7 +131,7 @@ void timer_setup(uint16_t quantidade_de_dados)
 
 ISR(TIMER1_COMPA_vect)
 {
-  sprintf(buffer, "%ld\n", Pulsos);
+  sprintf(buffer, "%ld %ld\n", Pulsos, RPM);
   for (uint8_t i = 0; buffer[i] != '\0'; ++i)
     USART_Transmit(buffer[i]);
   Pulsos = 0;
