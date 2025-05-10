@@ -21,21 +21,32 @@
 // caso queira desocupar o Pino INT1
 #define ENCODER_B PD3
 
-#define ROTOR_SNETIDO_HORARIO(pwm) \
+#define ROTOR_SENTIDO_HORARIO(pwm) \
   OCR0A = (uint8_t)pwm;            \
   OCR0B = 0;
-#define ROTOR_SNETIDO_ANTIHORARIO(pwm) \
+#define ROTOR_SENTIDO_ANTIHORARIO(pwm) \
   OCR0A = 0;                           \
   OCR0B = (uint8_t)pwm;
 
-#define PULSOS_POR_VOLTA (float)1024.
+#define ATIVA_INT0_ISR EIMSK |= (1 << INT0)
+#define DESATIVA_INT0_ISR EIMSK &= ~(1 << INT0)
+
+#define PULSOS_POR_VOLTA 1024
 
 //=====================================================
 //  VARIAVEIS GLOBAIS
 //=====================================================
 
+volatile struct
+{
+  int16_t RPM;   // rotacoes por minuto
+  int16_t omega; // velocidade angula (rad/s)
+  int32_t theta; // posicao global (graus)
+} rotor;
+
 volatile int32_t Pulsos = 0;
-volatile int32_t RPM = 0;
+
+volatile uint8_t flagsISR = 0;
 
 char buffer[BUFFER_MAX_LEN];
 
@@ -79,13 +90,28 @@ int main(void)
   USART_Init(MYUBRR);
   timer_setup(PERIODO_DE_AMOSTRAGEM);
 
-  ROTOR_SNETIDO_HORARIO(254);
+  ROTOR_SENTIDO_HORARIO(254);
 
   sei();
 
   while (1)
   {
-    RPM = ((float)Pulsos / PULSOS_POR_VOLTA) * (60000 / PERIODO_DE_AMOSTRAGEM);
+    if (flagsISR & 0x01)
+    {
+      DESATIVA_INT0_ISR; //Desativa a interrupcao
+
+      rotor.RPM = ((float)Pulsos / PULSOS_POR_VOLTA) * (60000 / PERIODO_DE_AMOSTRAGEM);
+
+      sprintf(buffer, "%ld %d\n", Pulsos, rotor.RPM);
+      for (uint8_t i = 0; buffer[i] != '\0'; ++i)
+        USART_Transmit(buffer[i]);
+
+      Pulsos = 0;
+
+      flagsISR ^= (1 << 0);
+
+      ATIVA_INT0_ISR; // Reativa a interrupcao
+    }
   }
 }
 
@@ -119,7 +145,7 @@ void external_intr_setup(void)
   // na borda de descida
   EICRA |= (1 << ISC01);
 
-  EIMSK |= (1 << INT0);
+  ATIVA_INT0_ISR;
 }
 
 void timer_setup(uint16_t quantidade_de_dados)
@@ -131,10 +157,7 @@ void timer_setup(uint16_t quantidade_de_dados)
 
 ISR(TIMER1_COMPA_vect)
 {
-  sprintf(buffer, "%ld %ld\n", Pulsos, RPM);
-  for (uint8_t i = 0; buffer[i] != '\0'; ++i)
-    USART_Transmit(buffer[i]);
-  Pulsos = 0;
+  flagsISR |= (1 << 0);
 }
 
 ISR(INT0_vect)
@@ -145,14 +168,6 @@ ISR(INT0_vect)
     Pulsos--;
 }
 
-/**
- * @brief Inicializacao do USART
- * @param ubrr Valor calculado do baud rate
- *
- * @note A definicao MYUBRR ja faz o calculo (datasheet)
- * e inicializa somento o TX, para o RX (1<<RXEN0) no
- * registrador UCSR0B
- */
 void USART_Init(unsigned int ubrr)
 {
   /*Set baud rate */
@@ -168,13 +183,6 @@ void USART_Init(unsigned int ubrr)
   UCSR0C |= (1 << USBS0) | (1 << UCSZ00);
 }
 
-/**
- * @brief Transmissao de um byte pelo USART0
- * @param data caractere
- *
- * @note Essa funcao é utilizada quando nao for utilizada
- * as interrupcoes para envio de dado
- */
 void USART_Transmit(unsigned char data)
 {
   /* Wait for empty transmit buffer */
