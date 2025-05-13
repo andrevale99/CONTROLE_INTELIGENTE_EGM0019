@@ -32,7 +32,7 @@
 #define ATIVA_INT0_ISR EIMSK |= (1 << INT0)
 #define DESATIVA_INT0_ISR EIMSK &= ~(1 << INT0)
 
-#define PULSOS_POR_VOLTA 1180
+#define PULSOS_POR_VOLTA 341.2f
 
 //=====================================================
 //  VARIAVEIS GLOBAIS
