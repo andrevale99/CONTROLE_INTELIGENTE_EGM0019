@@ -13,7 +13,7 @@
 
 #define BUFFER_MAX_LEN 32
 
-#define QUANTIDADE_DE_DADOS 10
+#define QUANTIDADE_DE_DADOS 1
 #define PERIODO_DE_AMOSTRAGEM (1000 / QUANTIDADE_DE_DADOS)
 
 #define ENCODER_A PD2
@@ -45,18 +45,18 @@ volatile struct
   int32_t theta; // posicao global (graus)
 } rotor;
 
-struct 
+struct
 {
   float kp;
   float ki;
   float kd;
 
   float erroAnterior;
-}controle;
+} controle;
 
 volatile int32_t Pulsos = 0;
-
 volatile uint8_t flagsISR = 0;
+uint16_t adcValue = 0;
 
 char buffer[BUFFER_MAX_LEN];
 
@@ -76,6 +76,14 @@ void external_intr_setup(void);
 ///
 /// @param quantidade_de_dados quantos dados quer ler por segundo
 void timer_setup(uint16_t quantidade_de_dados);
+
+/// @brief Configuracao do ADC
+void adc_setup(void);
+
+/// @brief Funcao para ler o ADC
+/// @param pino Pino que ADC que deseja ler
+/// @return Valor ADC de 10 bits [0;1023]
+uint16_t adc_read(uint8_t pino);
 
 /// @brief Configuracao do periferico UART
 /// @param ubrr Baud Rate da comunicacao
@@ -97,10 +105,11 @@ int main(void)
 {
   pwm_setup();
   external_intr_setup();
+  adc_setup();
   USART_Init(MYUBRR);
   timer_setup(QUANTIDADE_DE_DADOS);
 
-  ROTOR_SENTIDO_HORARIO(254);
+  ROTOR_SENTIDO_HORARIO(127);
 
   sei();
 
@@ -108,11 +117,13 @@ int main(void)
   {
     if (flagsISR & 0x01)
     {
-      DESATIVA_INT0_ISR; //Desativa a interrupcao
+      DESATIVA_INT0_ISR; // Desativa a interrupcao
+
+      adcValue = adc_read(0x00);
 
       rotor.RPM = ((float)Pulsos / PULSOS_POR_VOLTA) * (60000 / PERIODO_DE_AMOSTRAGEM);
 
-      sprintf(buffer, "%ld %d\n", Pulsos, rotor.RPM);
+      sprintf(buffer, "%ld %d %d\n", Pulsos, rotor.RPM, adcValue);
       for (uint8_t i = 0; buffer[i] != '\0'; ++i)
         USART_Transmit(buffer[i]);
 
@@ -176,6 +187,33 @@ ISR(INT0_vect)
     Pulsos++;
   else
     Pulsos--;
+}
+
+void adc_setup(void)
+{
+  ADMUX |= (1 << REFS0);
+
+  ADCSRA |= (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
+}
+
+uint16_t adc_read(uint8_t pino)
+{
+  static uint8_t adc_LSB;
+  static uint8_t adc_MSB;
+
+  ADMUX |= pino;
+
+  ADCSRA |= (1 << ADSC);
+
+  while (!(ADCSRA &= ~(1 << ADIF)))
+    ;
+
+  ADCSRA |= (1 << ADIF);
+
+  adc_LSB = ADCL;
+  adc_MSB = ADCH;
+
+  return (adc_MSB << 8) | adc_LSB;
 }
 
 void USART_Init(unsigned int ubrr)
