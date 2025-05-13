@@ -16,6 +16,8 @@
 #define QUANTIDADE_DE_DADOS 1
 #define PERIODO_DE_AMOSTRAGEM (1000 / QUANTIDADE_DE_DADOS)
 
+#define BOTAO PD4
+
 #define ENCODER_A PD2
 
 // Pode trocar para outro pino digital,
@@ -78,6 +80,9 @@ void external_intr_setup(void);
 /// @param quantidade_de_dados quantos dados quer ler por segundo
 void timer_setup(uint16_t quantidade_de_dados);
 
+/// @brief Configuracao dos pinos digitais
+void gpio_setup(void);
+
 /// @brief Configuracao do ADC
 void adc_setup(void);
 
@@ -111,23 +116,23 @@ int main(void)
 {
   pwm_setup();
   external_intr_setup();
+  gpio_setup();
   adc_setup();
   USART_Init(MYUBRR);
   timer_setup(QUANTIDADE_DE_DADOS);
 
-  ROTOR_SENTIDO_HORARIO(127);
+  ROTOR_SENTIDO_HORARIO(0);
 
   sei();
 
   while (1)
   {
-    if (flagsISR & 0x01)
+
+    adcValue = adc_read(0x00);
+    SetPoint = map_setpoint(adcValue);
+
+    if ((PIND & (1 << PIND4)) == 0)
     {
-      DESATIVA_INT0_ISR; // Desativa a interrupcao
-
-      adcValue = adc_read(0x00);
-      SetPoint = map_setpoint(adcValue);
-
       if (SetPoint > 0)
       {
         ROTOR_SENTIDO_HORARIO(SetPoint);
@@ -136,6 +141,11 @@ int main(void)
       {
         ROTOR_SENTIDO_ANTIHORARIO(-SetPoint);
       }
+    }
+
+    if (flagsISR & 0x01)
+    {
+      DESATIVA_INT0_ISR; // Desativa a interrupcao
 
       rotor.RPM = ((float)Pulsos / PULSOS_POR_VOLTA) * (60000 / PERIODO_DE_AMOSTRAGEM);
 
@@ -192,10 +202,15 @@ void timer_setup(uint16_t quantidade_de_dados)
   OCR1A = (uint16_t)62500 / quantidade_de_dados;
 }
 
+void gpio_setup(void)
+{
+  DDRD &= ~(1 << BOTAO);
+  PORTD |= (1 << BOTAO);
+}
+
 void adc_setup(void)
 {
   ADMUX |= (1 << REFS0);
-
   ADCSRA |= (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 }
 
@@ -205,7 +220,6 @@ uint16_t adc_read(uint8_t pino)
   static uint8_t adc_MSB;
 
   ADMUX |= pino;
-
   ADCSRA |= (1 << ADSC);
 
   while (!(ADCSRA &= ~(1 << ADIF)))
