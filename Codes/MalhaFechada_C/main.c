@@ -13,7 +13,7 @@
 
 #define BUFFER_MAX_LEN 32
 
-#define PERIODO_DE_AMOSTRAGEM 20
+#define PERIODO_DE_AMOSTRAGEM 1
 
 #define ENCODER_A PD2
 
@@ -31,7 +31,7 @@
 #define ATIVA_INT0_ISR EIMSK |= (1 << INT0)
 #define DESATIVA_INT0_ISR EIMSK &= ~(1 << INT0)
 
-#define PULSOS_POR_VOLTA 1024
+#define PULSOS_POR_VOLTA 341.2f
 
 //=====================================================
 //  VARIAVEIS GLOBAIS
@@ -90,7 +90,7 @@ int main(void)
   USART_Init(MYUBRR);
   timer_setup(PERIODO_DE_AMOSTRAGEM);
 
-  ROTOR_SENTIDO_HORARIO(254);
+  ROTOR_SENTIDO_HORARIO(90);
 
   sei();
 
