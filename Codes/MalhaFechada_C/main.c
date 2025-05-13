@@ -57,6 +57,7 @@ struct
 volatile int32_t Pulsos = 0;
 volatile uint8_t flagsISR = 0;
 uint16_t adcValue = 0;
+int16_t SetPoint = 0;
 
 char buffer[BUFFER_MAX_LEN];
 
@@ -93,6 +94,11 @@ void USART_Init(unsigned int ubrr);
 /// @param data o caractere que deseja mandar
 void USART_Transmit(unsigned char data);
 
+/// @brief Faz o map para [-255;255] usando o valor do ADC
+/// @param valorADC Valor ADC
+/// @return O valor entre [-255;255]
+int16_t map_setpoint(uint16_t valorADC);
+
 ISR(TIMER1_COMPA_vect);
 
 ISR(INT0_vect);
@@ -120,10 +126,20 @@ int main(void)
       DESATIVA_INT0_ISR; // Desativa a interrupcao
 
       adcValue = adc_read(0x00);
+      SetPoint = map_setpoint(adcValue);
+
+      if (SetPoint > 0)
+      {
+        ROTOR_SENTIDO_HORARIO(SetPoint);
+      }
+      else
+      {
+        ROTOR_SENTIDO_ANTIHORARIO(-SetPoint);
+      }
 
       rotor.RPM = ((float)Pulsos / PULSOS_POR_VOLTA) * (60000 / PERIODO_DE_AMOSTRAGEM);
 
-      sprintf(buffer, "%ld %d %d\n", Pulsos, rotor.RPM, adcValue);
+      sprintf(buffer, "%ld %d %d\n", Pulsos, rotor.RPM, SetPoint);
       for (uint8_t i = 0; buffer[i] != '\0'; ++i)
         USART_Transmit(buffer[i]);
 
@@ -176,19 +192,6 @@ void timer_setup(uint16_t quantidade_de_dados)
   OCR1A = (uint16_t)62500 / quantidade_de_dados;
 }
 
-ISR(TIMER1_COMPA_vect)
-{
-  flagsISR |= (1 << 0);
-}
-
-ISR(INT0_vect)
-{
-  if ((PIND & 0x0C))
-    Pulsos++;
-  else
-    Pulsos--;
-}
-
 void adc_setup(void)
 {
   ADMUX |= (1 << REFS0);
@@ -238,4 +241,22 @@ void USART_Transmit(unsigned char data)
     ;
   /* Put data into buffer, sends the data */
   UDR0 = data;
+}
+
+int16_t map_setpoint(uint16_t valorADC)
+{
+  return (((float)valorADC / 1023.) * 510 - 255);
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+  flagsISR |= (1 << 0);
+}
+
+ISR(INT0_vect)
+{
+  if ((PIND & 0x0C))
+    Pulsos++;
+  else
+    Pulsos--;
 }
