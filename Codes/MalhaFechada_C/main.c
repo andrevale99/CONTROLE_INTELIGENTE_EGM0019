@@ -13,7 +13,8 @@
 
 #define BUFFER_MAX_LEN 32
 
-#define PERIODO_DE_AMOSTRAGEM 20
+#define QUANTIDADE_DE_DADOS 10
+#define PERIODO_DE_AMOSTRAGEM (1000 / QUANTIDADE_DE_DADOS)
 
 #define ENCODER_A PD2
 
@@ -31,7 +32,7 @@
 #define ATIVA_INT0_ISR EIMSK |= (1 << INT0)
 #define DESATIVA_INT0_ISR EIMSK &= ~(1 << INT0)
 
-#define PULSOS_POR_VOLTA 1024
+#define PULSOS_POR_VOLTA 1180
 
 //=====================================================
 //  VARIAVEIS GLOBAIS
@@ -43,6 +44,15 @@ volatile struct
   int16_t omega; // velocidade angula (rad/s)
   int32_t theta; // posicao global (graus)
 } rotor;
+
+struct 
+{
+  float kp;
+  float ki;
+  float kd;
+
+  float erroAnterior;
+}controle;
 
 volatile int32_t Pulsos = 0;
 
@@ -88,7 +98,7 @@ int main(void)
   pwm_setup();
   external_intr_setup();
   USART_Init(MYUBRR);
-  timer_setup(PERIODO_DE_AMOSTRAGEM);
+  timer_setup(QUANTIDADE_DE_DADOS);
 
   ROTOR_SENTIDO_HORARIO(254);
 
