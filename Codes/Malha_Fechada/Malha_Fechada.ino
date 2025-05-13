@@ -86,8 +86,8 @@ void setup() {
 }
 
 void loop() {
-
-  sp = map(analogRead(POT_PIN), 0, 1023, -RPM_MAX_LIMIT, RPM_MAX_LIMIT);
+  sp = 150.;
+  // sp = map(analogRead(POT_PIN), 0, 1023, -RPM_MAX_LIMIT, RPM_MAX_LIMIT);
   unsigned long tempo = millis();
 
   if ((tempo - ultimoTempo) >= PERIODO || ultimoTempo == 0) {
