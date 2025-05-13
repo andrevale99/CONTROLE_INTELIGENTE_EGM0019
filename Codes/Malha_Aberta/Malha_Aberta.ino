@@ -86,23 +86,25 @@ void loop() {
   }
   analogWrite(PONTE_H_ENABLE, PWM);
 
-  Serial.print((float)ultimoTempo / 1000, 3);
-  Serial.print("\t");
-  Serial.print(TempoTotalCalculo);
-  Serial.print("\t");
-  Serial.print(valPot);
-  Serial.print("\t");
-  Serial.print(vel);
-  Serial.print("\t");
-  Serial.print(PWM);
-  Serial.print("\t");
+  // Serial.print((float)ultimoTempo / 1000, 3);
+  // Serial.print("\t");
+  // Serial.print(TempoTotalCalculo);
+  // Serial.print("\t");
+  // Serial.print(valPot);
+  // Serial.print("\t");
+  // Serial.print(vel);
+  // Serial.print("\t");
+  // Serial.print(PWM);
+  // Serial.print("\t");
   Serial.print(QtdPulsosCanalA);
   Serial.print("\t");
   Serial.print(QtdPulsoPorPeriodo);
-  Serial.print("\t");
-  Serial.print(theta);
-  Serial.print("\t");
-  Serial.println(omega);
+  // Serial.print("\t");
+  // Serial.print(theta);
+  // Serial.print("\t");
+  // Serial.print(omega);
+
+  Serial.print("\n");
 }
 
 //=====================================================
