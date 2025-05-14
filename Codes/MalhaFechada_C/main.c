@@ -26,13 +26,13 @@
 // O sentido de rotacao depende da posicao
 // dos fios da ponte H, ou da referencial
 #define ROTOR_SENTIDO_HORARIO(pwm) \
-  OCR0A = (uint8_t)pwm; \
+  OCR0A = (uint8_t)pwm;            \
   OCR0B = 0;
 
 // O sentido de rotacao depende da posicao
 // dos fios da ponte H, ou da referencial
 #define ROTOR_SENTIDO_ANTIHORARIO(pwm) \
-  OCR0A = 0; \
+  OCR0A = 0;                           \
   OCR0B = (uint8_t)pwm;
 
 #define ATIVA_INT0_ISR EIMSK |= (1 << INT0)
@@ -48,9 +48,9 @@
 
 volatile struct
 {
-  int16_t RPM;    // rotacoes por minuto
-  int16_t omega;  // velocidade angula (rad/s)
-  int32_t theta;  // posicao global (graus)
+  int16_t RPM;   // rotacoes por minuto
+  int16_t omega; // velocidade angula (rad/s)
+  int32_t theta; // posicao global (graus)
 
   // Pega a quantidade de pulsos do encoder
   // para calcular a posicao, caso necessario
@@ -129,7 +129,8 @@ ISR(INT0_vect);
 //  MAIN
 //=====================================================
 
-int main(void) {
+int main(void)
+{
   pwm_setup();
   external_intr_setup();
   gpio_setup();
@@ -146,17 +147,20 @@ int main(void) {
 
   sei();
 
-  while (1) {
+  while (1)
+  {
 
-    if ((PIND & (1 << PIND4)) == 0) {
+    if ((PIND & (1 << PIND4)) == 0)
+    {
       adcValue = adc_read(0x00);
       SetPoint = map_setpoint(adcValue, 0, 1023, -RPM_MAX_LIMIT, RPM_MAX_LIMIT);
     }
 
     controle.sinal = controle.acaoP + controle.acaoI;
 
-    if (flagsISR & 0x01) {
-      DESATIVA_INT0_ISR;  // Desativa a interrupcao
+    if (flagsISR & 0x01)
+    {
+      DESATIVA_INT0_ISR; // Desativa a interrupcao
 
       rotor.theta = ((float)rotor.PulsosCanal / PULSOS_POR_VOLTA) * 360;
       rotor.RPM = ((float)Pulsos / PULSOS_POR_VOLTA) * (60000 / PERIODO_DE_AMOSTRAGEM);
@@ -171,14 +175,10 @@ int main(void) {
 
       // anti-windup (para nao ficar
       // incrementando a integração infinitamente)
-      if (controle.sinal >= RPM_MAX_LIMIT) {
+      if (controle.sinal >= RPM_MAX_LIMIT)
         controle.acaoI = RPM_MAX_LIMIT;
-        controle.sinal = RPM_MAX_LIMIT;
-      }
-      if (controle.sinal <= -RPM_MAX_LIMIT) {
+      if (controle.sinal <= -RPM_MAX_LIMIT)
         controle.acaoI = -RPM_MAX_LIMIT;
-        controle.sinal = -RPM_MAX_LIMIT;
-      }
 
       controle.erroAnterior = erro;
 
@@ -186,12 +186,15 @@ int main(void) {
 
       flagsISR ^= (1 << 0);
 
-      ATIVA_INT0_ISR;  // Reativa a interrupcao
+      ATIVA_INT0_ISR; // Reativa a interrupcao
     }
 
-    if (controle.sinal <= 0) {
+    if (controle.sinal <= 0)
+    {
       ROTOR_SENTIDO_HORARIO(-controle.sinal);
-    } else {
+    }
+    else
+    {
       ROTOR_SENTIDO_ANTIHORARIO(controle.sinal);
     }
   }
@@ -201,7 +204,8 @@ int main(void) {
 //  FUNCS
 //=====================================================
 
-void pwm_setup() {
+void pwm_setup()
+{
   // Configurar PD6 (OC0A) e
   // PD5 (OC0B) como saída
   DDRD |= (1 << PD5) | (1 << PD6);
@@ -220,7 +224,8 @@ void pwm_setup() {
   OCR0B = 0;
 }
 
-void external_intr_setup(void) {
+void external_intr_setup(void)
+{
   // Interrupcao Externa no Pino INT0 (PD2)
   // na borda de descida
   EICRA |= (1 << ISC01);
@@ -228,23 +233,27 @@ void external_intr_setup(void) {
   ATIVA_INT0_ISR;
 }
 
-void timer_setup(uint16_t quantidade_de_dados) {
+void timer_setup(uint16_t quantidade_de_dados)
+{
   TCCR1B |= (1 << WGM12) | (1 << CS12);
   TIMSK1 |= (1 << OCIE1A);
   OCR1A = (uint16_t)62500 / quantidade_de_dados;
 }
 
-void gpio_setup(void) {
+void gpio_setup(void)
+{
   DDRD &= ~(1 << BOTAO);
   PORTD |= (1 << BOTAO);
 }
 
-void adc_setup(void) {
+void adc_setup(void)
+{
   ADMUX |= (1 << REFS0);
   ADCSRA |= (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 }
 
-uint16_t adc_read(uint8_t pino) {
+uint16_t adc_read(uint8_t pino)
+{
   static uint8_t adc_LSB;
   static uint8_t adc_MSB;
 
@@ -262,7 +271,8 @@ uint16_t adc_read(uint8_t pino) {
   return (adc_MSB << 8) | adc_LSB;
 }
 
-void USART_Init(unsigned int ubrr) {
+void USART_Init(unsigned int ubrr)
+{
   /*Set baud rate */
   UBRR0H = (unsigned char)(ubrr >> 8);
   UBRR0L = (unsigned char)ubrr;
@@ -276,7 +286,8 @@ void USART_Init(unsigned int ubrr) {
   UCSR0C |= (1 << USBS0) | (1 << UCSZ00);
 }
 
-void USART_Transmit(unsigned char data) {
+void USART_Transmit(unsigned char data)
+{
   /* Wait for empty transmit buffer */
   while (!(UCSR0A & (1 << UDRE0)))
     ;
@@ -284,19 +295,25 @@ void USART_Transmit(unsigned char data) {
   UDR0 = data;
 }
 
-float map_setpoint(float valor, float min, float max, float newmin, float newmax) {
+float map_setpoint(float valor, float min, float max, float newmin, float newmax)
+{
   return ((valor - min) * (newmax - newmin) / (max - min) + newmin);
 }
 
-ISR(TIMER1_COMPA_vect) {
+ISR(TIMER1_COMPA_vect)
+{
   flagsISR |= (1 << 0);
 }
 
-ISR(INT0_vect) {
-  if ((PIND & 0x0C)) {
+ISR(INT0_vect)
+{
+  if ((PIND & 0x0C))
+  {
     Pulsos++;
     rotor.PulsosCanal++;
-  } else {
+  }
+  else
+  {
     Pulsos--;
     rotor.PulsosCanal--;
   }
