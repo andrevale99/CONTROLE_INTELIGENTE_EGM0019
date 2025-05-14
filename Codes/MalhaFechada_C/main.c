@@ -150,7 +150,7 @@ int main(void)
   while (1)
   {
 
-    if ((PIND & (1 << PIND4)) == 0)
+    if ((PIND & (1 << BOTAO)) == 0)
     {
       adcValue = adc_read(0x00);
       SetPoint = map_setpoint(adcValue, 0, 1023, -RPM_MAX_LIMIT, RPM_MAX_LIMIT);
@@ -164,9 +164,6 @@ int main(void)
 
       rotor.theta = ((float)rotor.PulsosCanal / PULSOS_POR_VOLTA) * 360;
       rotor.RPM = ((float)Pulsos / PULSOS_POR_VOLTA) * (60000 / PERIODO_DE_AMOSTRAGEM);
-
-      // if (rotor.RPM < 0)
-      //   rotor.RPM = -1 * rotor.RPM;
 
       erro = (float)SetPoint - ((float)rotor.RPM);
       controle.acaoP = controle.kp * erro;
