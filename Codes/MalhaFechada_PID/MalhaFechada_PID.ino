@@ -157,7 +157,7 @@ int main(void) {
       SetPoint = map_setpoint(adcValue, 0, 1023, -RPM_MAX_LIMIT, RPM_MAX_LIMIT);
     }
 
-    controle.sinal = controle.acaoP + controle.acaoI;
+    controle.sinal = controle.acaoP + controle.acaoI + controle.acaoD;
 
     if (flagsISR & 0x01) {
       DESATIVA_INT0_ISR;  // Desativa a interrupcao
