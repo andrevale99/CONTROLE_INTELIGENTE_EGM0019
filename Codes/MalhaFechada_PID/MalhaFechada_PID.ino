@@ -78,6 +78,8 @@ uint16_t adcValue = 0;
 int16_t SetPoint = 0;
 float erro = 0.0;
 
+float tempo = 0;
+
 char buffer[BUFFER_MAX_LEN];
 
 //=====================================================
@@ -142,9 +144,9 @@ int main(void) {
   // Sem velocidade
   ROTOR_SENTIDO_HORARIO(0);
 
-  controle.kp = 0.5;
-  controle.ki = 10.8;
-  controle.kd = 0.0;
+  controle.kp = 0.3;
+  controle.ki = 1.0;
+  controle.kd = 0.1;
 
   sei();
 
@@ -184,9 +186,11 @@ int main(void) {
 
       controle.erroAnterior = erro;
 
-      Serial.print(170);
-      Serial.print("\t");
-      Serial.print(-170);
+      // Serial.print(170);
+      // Serial.print("\t");
+      // Serial.print(-170);
+      // Serial.print("\t");
+      Serial.print(tempo++ * PERIODO_DE_AMOSTRAGEM / 1000.);
       Serial.print("\t");
       Serial.print(rotor.RPM);
       Serial.print("\t");
