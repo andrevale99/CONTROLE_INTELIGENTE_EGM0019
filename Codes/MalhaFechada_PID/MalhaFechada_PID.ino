@@ -144,8 +144,8 @@ int main(void) {
   // Sem velocidade
   ROTOR_SENTIDO_HORARIO(0);
 
-  controle.kp = 1.0;
-  controle.ki = 2.0;
+  controle.kp = 0.3;
+  controle.ki = 1.0;
   controle.kd = 0.0;
 
   sei();
