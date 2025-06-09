@@ -89,24 +89,24 @@ void Timer_Config(void)
 
     // Timer base configuration
     htim1.Instance = TIM1;
-    htim1.Init.Prescaler = 1024; // 84 MHz / 84 = 1 MHz (1 µs)
+    htim1.Init.Prescaler = 1024; // Prescale da contador
     htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim1.Init.Period = 15625; // 1 kHz PWM (1 MHz / 1000)
-    htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim1.Init.Period = 15625; // Valor Maximo de contagem
+    htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1; // Fator de divisao da fonte do TIMER
     htim1.Init.RepetitionCounter = 0;
     htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     HAL_TIM_PWM_Init(&htim1);
 
     // Configuração do canal 2 para PWM do TIMER 1
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = 15000; // 50% de ciclo de trabalho
+    sConfigOC.Pulse = 15000; // Valor de comparacao para realizar o PWM
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2);
 
     // Configuração do canal 3 para PWM do TIMER 1
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 15000; // 50% de ciclo de trabalho
+    sConfigOC.Pulse = 15000; // Valor de comparacao para realizar o PWM
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3);
@@ -135,7 +135,7 @@ void GPIO_Config(void)
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP; // Alternate Function Push Pull
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF1_TIM1; // AF1 para TIM1 em 10
+    GPIO_InitStruct.Alternate = GPIO_AF1_TIM1; // AF1 para TIM1 em PA10
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
