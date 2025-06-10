@@ -15,7 +15,7 @@ void SystemClock_Config(void);
 
 // @brief Configuracao do Timer para gerar
 // sinal PWM
-void Timer_Config(void);
+void TIMER_Config(void);
 
 void GPIO_Config(void);
 
@@ -31,7 +31,7 @@ void Error_Handler(void);
 int main(void)
 {
     GPIO_Config();
-    Timer_Config();
+    TIMER_Config();
     HAL_Init();
 
     while (1)
@@ -79,7 +79,7 @@ void SystemClock_Config(void)
     }
 }
 
-void Timer_Config(void)
+void TIMER_Config(void)
 {
     // Habilita o clock do TIM1
     __HAL_RCC_TIM1_CLK_ENABLE();
