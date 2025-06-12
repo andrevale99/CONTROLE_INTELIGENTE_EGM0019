@@ -37,9 +37,9 @@ volatile static unsigned long ultimoTempo = 0;  // Variável usada para testar s
 
 #define BUTAO_PIN_PWM 8
 
-float paramtersIn1[9] = { -500.0, -50.0, 10.0,
+float paramtersIn1[9] = { -160.0, -50.0, 10.0,
                           -30.0, 0.0, 30.0 ,
-                          -10.0, 50.0, 500.0 };  // Parâmetros [a b c] das MFs da entrada 1 (erro)
+                          -10.0, 50.0, 160.0 };  // Parâmetros [a b c] das MFs da entrada 1 (erro)
 float paramtersIn2[6] = { -200.0, -30.0, 10.0,
                           -10.0, 30.0, 200.0 };  // Parâmetros [a b c] das MFs da entrada 2 (variação do erro)
 float paramtersout[6][3] = { { 0.4, 0.01, 0.0 },
