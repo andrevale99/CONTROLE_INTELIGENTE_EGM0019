@@ -22,6 +22,9 @@
   Em: Abril de 2023
   -----------------------------------------------*/
 
+#define BUTAO_PIN_PWM 8
+#define MAX_RPM 140
+
 const byte potPin = A0;                         // Usar pino analógico A0 para leitura do Potenciômetro
 const byte in1PtHPin = 7;                       // Usar pino digital 7  p/ entrada 1 da Ponte H
 const byte in2PtHPin = 6;                       // Usar pino digital 6 p/ entrada 2 da Ponte H
@@ -35,28 +38,31 @@ volatile long pulsosCanalA = 0;                 // Contador de pulsos TOTAIS do 
 volatile long pulsosPorPeriodo = 0;             // Contador de pulsos POR PERÍODO do Canal A do Encoder
 volatile static unsigned long ultimoTempo = 0;  // Variável usada para testar se o período foi atingido
 
-#define BUTAO_PIN_PWM 8
 
-float paramtersIn1[9] = { -500.0, -50.0, 10.0,
-                          -30.0, 0.0, 30.0 ,
-                          -10.0, 50.0, 500.0 };  // Parâmetros [a b c] das MFs da entrada 1 (erro)
-float paramtersIn2[6] = { -200.0, -30.0, 10.0,
-                          -10.0, 30.0, 200.0 };  // Parâmetros [a b c] das MFs da entrada 2 (variação do erro)
-float paramtersout[6][3] = { { 0.4, 0.01, 0.0 },
-                             { 0.05, 0.003, 0.0 },
-                             { 0.4, 0.01, 0.0 },
-                             { 0.4, 0.01, 0.0 },
-                             { 0.06, 0.003, 0.0 },
-                             { 0.4, 0.01, 0.0 } };  // Parâmetros [p q r]
-float erro = 0.0, erroAnt = 0.0, varErro = 0.0;     // Cria variáveis para: Erro, Erro Anterior e sua Variação
-float miIn1[3], miIn2[2];                           // Cria variáveis para armazenar o resultado da fuzzificação
-float mi[2][3];                                     // Cria variável para armazenar a compatibilidade global das regras
-float outl[2][3];                                   // Cria variável para armazenar a saída (consequente) de cada regra
-float outf;                                         // Cria variável para armazenar a saída do controlador fuzzy
-float controle = 0.0;                               // Cria variável para armazenar o Sinal de Controle
-int numMFsIn1 = 3;                                  // Número de funções de pertinência da entrada 1
-int numMFsIn2 = 2;                                  // Número de funções de pertinência da entrada 2
-int PWM = 0;                                        // Cria variável para armazenar o Sinal PWM de acion. do Controle
+// Valores para reazliar os testes
+uint8_t idxRPMteste = 0;
+int16_t RPMteste[5] = { -MAX_RPM, -MAX_RPM / 2, 0, MAX_RPM / 2, MAX_RPM };
+
+float paramtersIn1[9] = { -400.0, -50.0, 10.0,
+                          -30.0, 0.0, 30.0,
+                          -10.0, 50.0, 400.0 };  // Parâmetros [a b c] das MFs da entrada 1 (erro)
+float paramtersIn2[6] = { -500.0, -30.0, 10.0,
+                          -10.0, 30.0, 500.0 };  // Parâmetros [a b c] das MFs da entrada 2 (variação do erro)
+float paramtersout[6][3] = { { 1., 0.1, 0.0 },
+                             { 1.0, 0.1, 0.0 },
+                             { 0.004, 0.01, 0.0 },
+                             { 0.004, 0.01, 0.0 },
+                             { 1.0, 0.1, 0.0 },
+                             { 1., 0.1, 0.0 } };  // Parâmetros [p q r]
+float erro = 0.0, erroAnt = 0.0, varErro = 0.0;   // Cria variáveis para: Erro, Erro Anterior e sua Variação
+float miIn1[3], miIn2[2];                         // Cria variáveis para armazenar o resultado da fuzzificação
+float mi[2][3];                                   // Cria variável para armazenar a compatibilidade global das regras
+float outl[2][3];                                 // Cria variável para armazenar a saída (consequente) de cada regra
+float outf;                                       // Cria variável para armazenar a saída do controlador fuzzy
+float controle = 0.0;                             // Cria variável para armazenar o Sinal de Controle
+int numMFsIn1 = 3;                                // Número de funções de pertinência da entrada 1
+int numMFsIn2 = 2;                                // Número de funções de pertinência da entrada 2
+int PWM = 0;                                      // Cria variável para armazenar o Sinal PWM de acion. do Controle
 int sp = 0;
 
 void setup() {
@@ -71,10 +77,29 @@ void setup() {
 }
 
 void loop() {
-  if (digitalRead(BUTAO_PIN_PWM) == 0)
-    sp = map(analogRead(potPin), 0, 1023, -150, 150);  // Converte leitura do pot. em setpoint, -160 à 160RPM
+  // if (digitalRead(BUTAO_PIN_PWM) == 0)
+  //   sp = map(analogRead(potPin), 0, 1023, -MAX_RPM, MAX_RPM);  // Converte leitura do pot. em setpoint, -160 à 160RPM
 
-  unsigned long tempo = millis();                                             // Atualiza a variável tempo
+  unsigned long tempo = millis();  // Atualiza a variável tempo
+
+  if (tempo < 10000)
+    sp = RPMteste[0];
+
+  else if (tempo >= 10000 && tempo < 20000)
+    sp = RPMteste[1];
+
+  else if (tempo >= 20000 && tempo < 30000)
+    sp = RPMteste[2];
+
+  else if (tempo >= 30000 && tempo < 40000)
+    sp = RPMteste[3];
+
+  else if (tempo >= 40000 && tempo < 50000)
+    sp = RPMteste[4];
+
+  else 
+    sp = 0;
+
   if (tempo - ultimoTempo >= periodo || ultimoTempo == 0) {                   // SE já se passou pelo menos um "período"
     ultimoTempo = tempo;                                                      // ENTÃO: atualiza a variável "ultimoTempo"
     detachInterrupt(digitalPinToInterrupt(canalAPin));                        // para evitar interferências
@@ -181,10 +206,14 @@ void mostraDadosMotor(int op, float theta, float omega, int sp, float erro, floa
       Serial.print("\t");     // Imprime uma tabulação
       Serial.println(theta);  // Imprime apenas o valor de Theta
       break;
-    case 3:                      // Se foi escolhida a opção 3,
-      Serial.print(sp);          // Imprime o SP
-      Serial.print("\t");        // Imprime uma tabulação
-      Serial.print(erro);        // Imprime o erro
+    case 3:                                     // Se foi escolhida a opção 3,
+      Serial.print((float)ultimoTempo / 1000);  // Imprime valor de ultimoTempo
+      Serial.print("\t");                       // Imprime uma tabulação
+      Serial.print(sp);                         // Imprime o SP
+      Serial.print("\t");                       // Imprime uma tabulação
+      Serial.print(erro);                       // Imprime o erro
+      Serial.print("\t");
+      Serial.print(controle);  // Imprime o sinal de controle
       Serial.print("\t");
       Serial.println(omega, 4);  // Imprimeapenas  valor de Omega
       break;
