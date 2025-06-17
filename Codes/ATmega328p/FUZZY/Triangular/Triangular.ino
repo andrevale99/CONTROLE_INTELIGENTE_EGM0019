@@ -48,12 +48,12 @@ float paramtersIn1[9] = { -400.0, -50.0, 10.0,
                           -10.0, 50.0, 400.0 };  // Parâmetros [a b c] das MFs da entrada 1 (erro)
 float paramtersIn2[6] = { -500.0, -30.0, 10.0,
                           -10.0, 30.0, 500.0 };  // Parâmetros [a b c] das MFs da entrada 2 (variação do erro)
-float paramtersout[6][3] = { { 1, 0., 0.0 },
-                             { .1, 0.0, 0.0 },
-                             { .01, 0.0, 0.0 },
-                             { .00, 0.0, 0.0 },
-                             { .0, 0.0, 0.0 },
-                             { 1, 0., 0.0 } };  // Parâmetros [p q r]
+float paramtersout[6][3] = { { 1, 0.1, 0.0 },
+                             { .1, 0.01, 0.0 },
+                             { .01, 0.01, 0.0 },
+                             { .01, 0.01, 0.0 },
+                             { .1, 0.01, 0.0 },
+                             { 0.0, 0.1, 0.0 } };  // Parâmetros [p q r]
 float erro = 0.0, erroAnt = 0.0, varErro = 0.0;   // Cria variáveis para: Erro, Erro Anterior e sua Variação
 float miIn1[3], miIn2[2];                         // Cria variáveis para armazenar o resultado da fuzzificação
 float mi[2][3];                                   // Cria variável para armazenar a compatibilidade global das regras
