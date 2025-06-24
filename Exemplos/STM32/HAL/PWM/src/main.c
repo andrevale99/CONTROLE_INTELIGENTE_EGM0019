@@ -4,7 +4,8 @@
 //  VARIAVEIS
 //===========================================
 
-TIM_HandleTypeDef Handle_TIM1;
+TIM_HandleTypeDef htim1;
+TIM_OC_InitTypeDef sConfigOC = {0};
 
 //===========================================
 //  PROTOTIPOS
@@ -34,8 +35,21 @@ int main(void)
     TIMER_Config();
     HAL_Init();
 
+    uint16_t dutyCycle = HAL_TIM_ReadCapturedValue(&htim1, TIM_CHANNEL_2);
     while (1)
-        ;
+    {
+        while (dutyCycle < __HAL_TIM_GET_AUTORELOAD(&htim1))
+        {
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, ++dutyCycle);
+            HAL_Delay(1);
+        }
+        while (dutyCycle > 0)
+        {
+            __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, --dutyCycle);
+            HAL_Delay(1);
+        }
+    }
+
     return 0;
 }
 
@@ -84,14 +98,11 @@ void TIMER_Config(void)
     // Habilita o clock do TIM1
     __HAL_RCC_TIM1_CLK_ENABLE();
 
-    TIM_HandleTypeDef htim1;
-    TIM_OC_InitTypeDef sConfigOC = {0};
-
     // Timer base configuration
     htim1.Instance = TIM1;
     htim1.Init.Prescaler = 1024; // Prescale da contador
     htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim1.Init.Period = 15625; // Valor Maximo de contagem
+    htim1.Init.Period = 15625;                         // Valor Maximo de contagem
     htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1; // Fator de divisao da fonte do TIMER
     htim1.Init.RepetitionCounter = 0;
     htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -146,6 +157,6 @@ void Error_Handler(void)
     __disable_irq();
     while (1)
     {
+        /* USER CODE END Error_Handler_Debug */
     }
-    /* USER CODE END Error_Handler_Debug */
 }
