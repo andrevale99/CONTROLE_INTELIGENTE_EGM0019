@@ -142,7 +142,7 @@ float paramtersout[6][3] = { { 1, 0.1, 0.0 },
 ```
 ---
 
-10. Ts = 100 ms | min
+10. Ts = 100 ms | min (**MELHORZINHO**)
 ```
 float paramtersIn1[12] = { -400.0, -100, -50.0, 30.0,
                            -75.0, -10, 10.0, 75.0,
