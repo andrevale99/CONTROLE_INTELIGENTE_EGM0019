@@ -47,14 +47,17 @@ int16_t RPMteste[5] = { -MAX_RPM, -MAX_RPM / 2, 0, MAX_RPM / 2, MAX_RPM };
 float paramtersIn1[12] = { -400.0, -100, -50.0, 30.0,
                            -75.0, -10, 10.0, 75.0,
                            -30.0, 50, 100.0, 400.0 };  // Parâmetros [a b c] das MFs da entrada 1 (erro)
+
 float paramtersIn2[8] = { -500.0, -250, -100.0, 100.0,
                           -100.0, 100.0, 250, 500.0 };  // Parâmetros [a b c] das MFs da entrada 2 (variação do erro)
-float paramtersout[6][3] = { { 1, 0.1, 0.0 },
-                             { .1, 0.1, 0.0 },
-                             { .01, 0.1, 0.0 },
-                             { .1, 0.01, 0.0 },
-                             { .6, 0.001, 0.0 },
-                             { 0.8, 0.01, 0.0 } };  // Parâmetros [p q r]
+
+float paramtersout[6][3] = { { 1, 0.01, 0.0 },
+                             { .03, 0.05, 0.0 },
+                             { .03, 0.1, 0.0 },
+                             { .03, 0.1, 0.0 },
+                             { .03, 0.05, 0.0 },
+                             { 1.2, 0.4, 0.0 } };  // Parâmetros [p q r]
+
 float erro = 0.0, erroAnt = 0.0, varErro = 0.0;    // Cria variáveis para: Erro, Erro Anterior e sua Variação
 float miIn1[3], miIn2[2];                          // Cria variáveis para armazenar o resultado da fuzzificação
 float mi[2][3];                                    // Cria variável para armazenar a compatibilidade global das regras

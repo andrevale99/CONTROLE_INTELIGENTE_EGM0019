@@ -35,6 +35,8 @@ volatile long long ultimoTempo = 0;
 float theta = 0;
 float omega = 0;
 
+volatile bool flagBotaoPressionado = false; // Flag que será modificada na ISR
+
 static float acaoP = 0.;
 static float acaoI = 0.;
 static float acaoD = 0.;
@@ -58,6 +60,10 @@ void aciona_motor(float controle, int PWM);
 void show_data(void);
 
 //=====================================================
+//  FUNCS
+//=====================================================
+
+//=====================================================
 //  SETUP E LOOP
 //=====================================================
 
@@ -65,7 +71,7 @@ void setup() {
   Serial.begin(115200);
 
   pinMode(PONTE_H_1, OUTPUT);
-  pinMode(PONTE_H_1, OUTPUT);
+  pinMode(PONTE_H_2, OUTPUT);
   pinMode(PONTE_H_ENABLE, OUTPUT);
 
   pinMode(CANAL_ENCODER_A, INPUT_PULLUP);
@@ -75,11 +81,13 @@ void setup() {
 
   attachInterrupt(digitalPinToInterrupt(CANAL_ENCODER_A),
                   atualizaEncoder, CHANGE);
+  
+  flagBotaoPressionado = true; // <- Garante que o motor ligue na primeira iteração
 }
 
 void loop() {
-
-  sp = map(analogRead(POT_PIN), 0, 1023, -RPM_MAX_LIMIT, RPM_MAX_LIMIT);
+  sp = 150.;
+  // sp = map(analogRead(POT_PIN), 0, 1023, -RPM_MAX_LIMIT, RPM_MAX_LIMIT);
   unsigned long tempo = millis();
 
   if ((tempo - ultimoTempo) >= PERIODO || ultimoTempo == 0) {
@@ -122,18 +130,17 @@ void loop() {
 
 
   controle = acaoP + acaoI + acaoD;
-
-  // anti-windup (para nao ficar
-  // incrementando a integração infinitamente)
-  //if (controle > 255)
-  //controle = 255;
-  //if (controle < -255)
-  //controle = -255;
   
-  // if (digitalRead(BUTAO_PIN_PWM) == 0) {
+  if (digitalRead(BUTAO_PIN_PWM) == LOW) {
+  flagBotaoPressionado = true;
+  }
+  if (flagBotaoPressionado) {
+    flagBotaoPressionado = false; // Limpa a flag
+
+    // Executa o código desejado
     PWM = min(abs(controle), 255);
     aciona_motor(controle, PWM);
-  // }
+  }
 }
 
 //=====================================================
@@ -152,11 +159,11 @@ void atualizaEncoder(void) {
 
 void aciona_motor(float controle, int PWM) {
   if (controle >= 0) {
-    digitalWrite(PONTE_H_1, HIGH);
-    digitalWrite(PONTE_H_2, LOW);
-  } else {
     digitalWrite(PONTE_H_1, LOW);
     digitalWrite(PONTE_H_2, HIGH);
+  } else {
+    digitalWrite(PONTE_H_1, HIGH);
+    digitalWrite(PONTE_H_2, LOW);
   }
   analogWrite(PONTE_H_ENABLE, PWM);
 }
@@ -199,3 +206,7 @@ void show_data(void) {
 
   Serial.print("\n");
 }
+
+//=====================================================
+//  FUNCS
+//=====================================================

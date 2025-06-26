@@ -63,6 +63,7 @@ float paramtersout[10][3] = { { 1, 0.1, 0.0 },
                              {.8, 0.1, 0.0},
                              {.8, 0.1, 0.0},
                              {1, 0.1, 0.0} };  // Parâmetros [p q r]
+                             
 float erro = 0.0, erroAnt = 0.0, varErro = 0.0;   // Cria variáveis para: Erro, Erro Anterior e sua Variação
 float miIn1[5], miIn2[2];                         // Cria variáveis para armazenar o resultado da fuzzificação
 float mi[2][5];                                   // Cria variável para armazenar a compatibilidade global das regras

@@ -14,10 +14,14 @@
 
 #define BUFFER_MAX_LEN 128
 
+<<<<<<< HEAD:Codes/ATmega328p/Controle_PID/MalhaFechada_C/main.c
 #define QUANTIDADE_DE_DADOS 10
 #define PERIODO_DE_AMOSTRAGEM (1000 / QUANTIDADE_DE_DADOS)
 
 #define BOTAO PD4
+=======
+#define PERIODO_DE_AMOSTRAGEM 1
+>>>>>>> origin/danilo:Codes/MalhaFechada_C/main.c
 
 #define ENCODER_A PD2
 
@@ -41,8 +45,11 @@
 #define DESATIVA_INT0_ISR EIMSK &= ~(1 << INT0)
 
 #define PULSOS_POR_VOLTA 341.2f
+<<<<<<< HEAD:Codes/ATmega328p/Controle_PID/MalhaFechada_C/main.c
 
 #define RPM_MAX_LIMIT 160
+=======
+>>>>>>> origin/danilo:Codes/MalhaFechada_C/main.c
 
 //=====================================================
 //  VARIAVEIS GLOBAIS
@@ -141,6 +148,7 @@ int main(void)
   timer_setup(QUANTIDADE_DE_DADOS);
   init_4bitsLCD();
 
+<<<<<<< HEAD:Codes/ATmega328p/Controle_PID/MalhaFechada_C/main.c
   writeLCD("HELLO", 5);
 
   // Sem velocidade
@@ -150,6 +158,9 @@ int main(void)
   controle.kp = 0.5;
   controle.ki = 0.8;
   controle.kd = 0.0;
+=======
+  ROTOR_SENTIDO_HORARIO(90);
+>>>>>>> origin/danilo:Codes/MalhaFechada_C/main.c
 
   sei();
 
