@@ -41,26 +41,34 @@ volatile static unsigned long ultimoTempo = 0;  // Variável usada para testar s
 
 // Valores para reazliar os testes
 uint8_t idxRPMteste = 0;
-int16_t RPMteste[5] = {-44, -127, 115, -131, -74};
+int16_t RPMteste[5] = {-58, -137, 136, -110, -49};
 
-float paramtersIn1[9] = { -400.0, -50.0, 10.0,
-                          -30.0, 0.0, 30.0,
-                          -10.0, 50.0, 400.0 };  // Parâmetros [a b c] das MFs da entrada 1 (erro)
-float paramtersIn2[6] = { -500.0, -30.0, 10.0,
-                          -10.0, 30.0, 500.0 };  // Parâmetros [a b c] das MFs da entrada 2 (variação do erro)
-float paramtersout[6][3] = { { 1.2, 0.2, 0.0 },
-                             { .05, 0.1, 0.0 },
+float paramtersIn1[15] = {-400.0, -350.0, -100.0, 
+-150.0, -50.0, 0.0,
+  -50.0, 0.0, 50.0,
+  0.0, 50.0, 150.0,
+  100.0, 350.0, 400.0 };  // Parâmetros [a b c] das MFs da entrada 1 (erro)
+
+float paramtersIn2[6] = { -400.04 -30.0, 10.0,
+                          -10.0, 30.0, 400.0 };  // Parâmetros [a b c] das MFs da entrada 2 (variação do erro)
+                        
+float paramtersout[10][3] = { { 1.2, 0.2, 0.0 },
+                             { .1, 0.01, 0.0 },
+                             { .02, 0.05, 0.0 },
+                             { .02, 0.05, 0.0 },
+                             { .01, 0.1, 0.0 },
                              { .01, 0.05, 0.0 },
                              { .01, 0.05, 0.0 },
-                             { .05, 0.1, 0.0 },
-                             { .75, 0.5, 0.0 } };  // Parâmetros [p q r]
+                             { .01, 0.05, 0.0 },
+                             { .55, 0.1, 0.0 },
+                             { 1.2, 0.2, 0.0 } };  // Parâmetros [p q r]
 float erro = 0.0, erroAnt = 0.0, varErro = 0.0;   // Cria variáveis para: Erro, Erro Anterior e sua Variação
-float miIn1[3], miIn2[2];                         // Cria variáveis para armazenar o resultado da fuzzificação
-float mi[2][3];                                   // Cria variável para armazenar a compatibilidade global das regras
-float outl[2][3];                                 // Cria variável para armazenar a saída (consequente) de cada regra
+float miIn1[5], miIn2[2];                         // Cria variáveis para armazenar o resultado da fuzzificação
+float mi[2][5];                                   // Cria variável para armazenar a compatibilidade global das regras
+float outl[2][5];                                 // Cria variável para armazenar a saída (consequente) de cada regra
 float outf;                                       // Cria variável para armazenar a saída do controlador fuzzy
 float controle = 0.0;                             // Cria variável para armazenar o Sinal de Controle
-int numMFsIn1 = 3;                                // Número de funções de pertinência da entrada 1
+int numMFsIn1 = 5;                                // Número de funções de pertinência da entrada 1
 int numMFsIn2 = 2;                                // Número de funções de pertinência da entrada 2
 int PWM = 0;                                      // Cria variável para armazenar o Sinal PWM de acion. do Controle
 int sp = 0;
