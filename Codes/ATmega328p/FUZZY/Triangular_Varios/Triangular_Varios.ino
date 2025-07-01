@@ -41,29 +41,27 @@ volatile static unsigned long ultimoTempo = 0;  // Variável usada para testar s
 
 // Valores para reazliar os testes
 uint8_t idxRPMteste = 0;
-int16_t RPMteste[5] = { -MAX_RPM, -MAX_RPM / 2, 0, MAX_RPM / 2, MAX_RPM };
+int16_t RPMteste[5] = {-58, -137, 136, -110, -49};
 
-float paramtersIn1[15] = { 
-  -400.0, -350.0, -100.0,
-  -150.0, -50.0, 0.0, 
+float paramtersIn1[15] = {-400.0, -350.0, -100.0, 
+-150.0, -50.0, 0.0,
   -50.0, 0.0, 50.0,
   0.0, 50.0, 150.0,
-  100.0, 350.0, 400.0
-};
+  100.0, 350.0, 400.0 };  // Parâmetros [a b c] das MFs da entrada 1 (erro)
 
-float paramtersIn2[6] = { -500.0, -245.0, 10.0,
-                          -10.0, 245.0, 500.0 };  // Parâmetros [a b c] das MFs da entrada 2 (variação do erro)
-float paramtersout[10][3] = { { 1, 0.1, 0.0 },
-                             { .8, 0.1, 0.0 },
-                             { .8, 0.1, 0.0 },
+float paramtersIn2[6] = { -400.04 -30.0, 10.0,
+                          -10.0, 30.0, 400.0 };  // Parâmetros [a b c] das MFs da entrada 2 (variação do erro)
+                        
+float paramtersout[10][3] = { { 1.2, 0.2, 0.0 },
                              { .1, 0.01, 0.0 },
-                             { .1, 0.01, 0.0 },
-                             { .1, 0.01, 0.0 },
-                             { .1, 0.01, 0.0},
-                             {.8, 0.1, 0.0},
-                             {.8, 0.1, 0.0},
-                             {1, 0.1, 0.0} };  // Parâmetros [p q r]
-                             
+                             { .02, 0.05, 0.0 },
+                             { .02, 0.05, 0.0 },
+                             { .01, 0.1, 0.0 },
+                             { .01, 0.05, 0.0 },
+                             { .01, 0.05, 0.0 },
+                             { .01, 0.05, 0.0 },
+                             { .55, 0.1, 0.0 },
+                             { 1.2, 0.2, 0.0 } };  // Parâmetros [p q r]
 float erro = 0.0, erroAnt = 0.0, varErro = 0.0;   // Cria variáveis para: Erro, Erro Anterior e sua Variação
 float miIn1[5], miIn2[2];                         // Cria variáveis para armazenar o resultado da fuzzificação
 float mi[2][5];                                   // Cria variável para armazenar a compatibilidade global das regras
