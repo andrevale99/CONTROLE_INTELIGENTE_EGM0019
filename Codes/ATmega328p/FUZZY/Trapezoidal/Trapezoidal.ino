@@ -25,7 +25,7 @@
 #define BUTAO_PIN_PWM 8
 #define MAX_RPM 140
 
-
+unsigned long TempoCalc = 0;
 const byte potPin = A0;                         // Usar pino analógico A0 para leitura do Potenciômetro
 const byte in1PtHPin = 7;                       // Usar pino digital 7  p/ entrada 1 da Ponte H
 const byte in2PtHPin = 6;                       // Usar pino digital 6 p/ entrada 2 da Ponte H
@@ -42,7 +42,7 @@ volatile static unsigned long ultimoTempo = 0;  // Variável usada para testar s
 
 // Valores para reazliar os testes
 uint8_t idxRPMteste = 0;
-int16_t RPMteste[5] = { -MAX_RPM, -MAX_RPM / 2, 0, MAX_RPM / 2, MAX_RPM };
+int16_t RPMteste[5] = {-111, -66, 85, -39, 137};
 
 float paramtersIn1[12] = { -400.0, -100, -50.0, 30.0,
                            -75.0, -10, 10.0, 75.0,
@@ -51,11 +51,11 @@ float paramtersIn1[12] = { -400.0, -100, -50.0, 30.0,
 float paramtersIn2[8] = { -500.0, -250, -100.0, 100.0,
                           -100.0, 100.0, 250, 500.0 };  // Parâmetros [a b c] das MFs da entrada 2 (variação do erro)
 
-float paramtersout[6][3] = { { 1, 0.01, 0.0 },
-                             { .03, 0.05, 0.0 },
-                             { .03, 0.1, 0.0 },
-                             { .03, 0.1, 0.0 },
-                             { .03, 0.05, 0.0 },
+float paramtersout[6][3] = { { 1, 0.1, 0.0 },
+                             { .8, 0.5, 0.0 },
+                             { .5, 0.5, 0.0 },
+                             { .5, 0.5, 00 },
+                             { .8, 0.5, 0.0 },
                              { 1.2, 0.4, 0.0 } };  // Parâmetros [p q r]
 
 float erro = 0.0, erroAnt = 0.0, varErro = 0.0;    // Cria variáveis para: Erro, Erro Anterior e sua Variação
@@ -107,6 +107,7 @@ void loop() {
   if (tempo - ultimoTempo >= periodo || ultimoTempo == 0) {                   // SE já se passou pelo menos um "período"
     ultimoTempo = tempo;                                                      // ENTÃO: atualiza a variável "ultimoTempo"
     detachInterrupt(digitalPinToInterrupt(canalAPin));                        // para evitar interferências
+    TempoCalc = micros();
     float theta = pulsosCanalA / pulsosPorVolta * 360;                        // Calcula a posição angular (Theta) em graus
     float omega = ((pulsosPorPeriodo / pulsosPorVolta) * (60000 / periodo));  // Calcula a velocidade angular
     erro = sp - omega;                                                        // Calcula o erro entre o SP e a PV
@@ -128,7 +129,7 @@ void loop() {
     for (int MFsIN2 = 0; MFsIN2 < numMFsIn2; MFsIN2++) {
       for (int MFsIN1 = 0; MFsIN1 < numMFsIn1; MFsIN1++) {
         // Calculo da T-Norma de Zadeh para o operador "E" das regras
-        mi[MFsIN2][MFsIN1] = min(miIn1[MFsIN1], miIn2[MFsIN2]);
+        mi[MFsIN2][MFsIN1] = max(miIn1[MFsIN1], miIn2[MFsIN2]);
         // Calculo do Consequnte de cada regra, usando funções Sugeno lineares
         outl[MFsIN2][MFsIN1] = paramtersout[contOut][0] * erro + paramtersout[contOut][1] * varErro + paramtersout[contOut][2];
         contOut++;
@@ -151,6 +152,7 @@ void loop() {
     if (controle < -255)
       controle = -255;
     // Calcula o Sinal de Controle (a partir da saída do fuzzy)
+    TempoCalc = micros() - TempoCalc;
     attachInterrupt(digitalPinToInterrupt(canalAPin), atualizaEncoderA, FALLING);  // Reabilita interrupção
     mostraDadosMotor(3, theta, omega, sp, erro, varErro, outf, controle, PWM);     // Chama função para exibição dos dados calculados
   }
@@ -222,7 +224,9 @@ void mostraDadosMotor(int op, float theta, float omega, int sp, float erro, floa
       Serial.print("\t");
       Serial.print(controle);  // Imprime o sinal de controle
       Serial.print("\t");
-      Serial.println(omega, 4);  // Imprimeapenas  valor de Omega
+      Serial.print(omega, 4);  // Imprimeapenas  valor de Omega
+      Serial.print("\t");
+      Serial.println(TempoCalc);
       break;
     case 4:                                     // Se foi escolhida a opção 4,
       Serial.print("Tempo: ");                  // Imprime mensagem ...
